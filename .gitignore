@@ -1,0 +1,4 @@
+node_modules/
+CatChat.exe-win32-x64/
+package-lock.json
+.idea
