@@ -1048,18 +1048,18 @@ textarea{
     position: relative;
     cursor: pointer;
 }
-/*.gitLink:before{
+.gitLink:before{
     content: "";
     width: 24px;
     height: 24px;
-    background-image: url(/img/github-logo.png);
+    background-image: url(../img/github-logo.png);
     -webkit-background-size: cover;
     background-size: cover;
     transition: all .2s linear;
 }
 .gitLink:hover:before{
-    background-image: url(/img/github-logo-hover.png);
-}*/
+    background-image: url(../img/github-logo-hover.png);
+}
 .btn.search img{
     width: 16px;
 }
