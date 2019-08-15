@@ -1,15 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import config from '../../../config'
 
 class TopNav extends React.Component {
 
-    logOut =()=> {
+    logOut = async ()=> {
         //console.log('logOut');
         sessionStorage.removeItem('user');
         sessionStorage.removeItem('error');
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/logout',true);
-        xhr.send();
+        await fetch('http://' + config.serverUrl +':'+ config.serverPort + '/logout',{
+            method:'post',
+            headers:{'Content-Type': 'application/json',},
+        });
         return false;
     };
     render() {

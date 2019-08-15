@@ -23,7 +23,7 @@ class RegisterP extends React.Component {
     };
 
     handleChange =(e)=> {
-        var name = this.refs.nInp;
+        let name = this.refs.nInp;
         console.log("inpName: ",e.target.name,",","inpVal: ", e.target.value);
         if(e.target.name === "username") {
             console.log("regExpr: ",this.regExpr(e.target.value),",","regEnglish: ", this.regEnglish(e.target.value));
@@ -31,28 +31,28 @@ class RegisterP extends React.Component {
                 name.style.color = '#69bc37';
             } else {
                 name.style.color = '#ca5b53';
-            };
+            }
         }
         this.setState({ [e.target.name]: e.target.value });
-        var keyLog = e.currentTarget.value;
-        var password = this.refs.pInp;
-        var confirmPassword = this.refs.cPInp;
+        let keyLog = e.currentTarget.value;
+        let password = this.refs.pInp;
+        let confirmPassword = this.refs.cPInp;
         if(keyLog === this.state.password || keyLog === this.state.confirmPassword) {
             confirmPassword.style.color = '#69bc37';
             password.style.color = '#69bc37';
         } else {
             confirmPassword.style.color = '#ca5b53';
             password.style.color = '#ca5b53';
-        };
+        }
     };
 
     regExpr =(name)=> {
-        var a = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?012345679]/;//special letters & numbers
+        const a = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?012345679]/;//special letters & numbers
         return name.match(a);
     };
 
     regEnglish =(name)=> {
-        var a =/[^\x00-\x7F]/;//letters from a-z && A-Z
+        const a =/[^\x00-\x7F]/;//letters from a-z && A-Z
         return name.match(a);
     };
 
@@ -91,7 +91,7 @@ class RegisterP extends React.Component {
             });
             if(res.ok) {
                 res = await res.json();
-                console.log("login res.user: ",res.user);
+                console.log("reg sendAuth res.user: ",res.user);
                 sessionStorage.setItem('user', JSON.stringify(res.user));
                 this.setState({ chatRedirect: true });
             } else {
@@ -104,15 +104,20 @@ class RegisterP extends React.Component {
                 }
             }
         } catch (err) {
-            console.log("login err: ",err);
+            console.log("reg sendAuth login err: ",err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
         }
     };
 
     render() {
 
         //console.log('/login user:',this.state.user);
-        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;};
-        if(this.state.errorRedirect) {return <Redirect to='/error' />};
+        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;}
+        if(this.state.errorRedirect) {return <Redirect to='/error' />}
         return (
             <Page user={this.state.user} title="REGISTRATION PAGE" className="container">
                 {(this.state.modalWindow)?(

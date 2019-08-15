@@ -176,7 +176,7 @@ class Chat extends React.Component {
                 console.log('Server error happened: ',message);
                 if(typeof message === 'string' || message instanceof String) {
                     let data = JSON.parse(message);
-                    if(data.status == 423 || data.status == 401) {
+                    if(data.status === 423 || data.status === 401) {
                         this.setState({err: data});
                         sessionStorage.setItem('error', message);
                         console.log('error page redirect: ',this.state.err);
@@ -702,7 +702,7 @@ class Chat extends React.Component {
         this.setState({showSearch: !this.state.showSearch})
     };
     //scrollHandler emit load new part of history log
-    onScrollHandler =(e,name,array,itm)=> {
+    onScrollHandler =(e,name,array)=> {
         //console.log("scrollHandler: ",e.target);
         if(e.target.scrollTop === 0) {
             //console.log("scrollHandler on top: ",e," ,",name," ,",array," ,",itm);

@@ -10,7 +10,7 @@ import config from '../../../config'
 
 class UserP extends React.Component {
     constructor (props) {
-        var user = JSON.parse(sessionStorage.getItem('user'));
+        let user = JSON.parse(sessionStorage.getItem('user'));
         super(props);
         this.state = {
             chatRedirect: false,
@@ -36,12 +36,12 @@ class UserP extends React.Component {
     };
     //prompt window show
     showPrompt = (promptMessage) => {
-        console.log('promptMessage: ',promptMessage);
+        //console.log('promptMessage: ',promptMessage);
         this.setState({promptMessage: promptMessage,PromptModalWindow: true});
     };
     //prompt window handler
     promptHandler = (promptRes) => {
-        console.log('promptRes: ',promptRes);
+        //console.log('promptRes: ',promptRes);
         this.setState({promptRes: promptRes,PromptModalWindow: false});
         if(this.state.promptMessage === "Confirm You Password:") {
             this.setState({promptPass: promptRes,PromptModalWindow: false});
@@ -51,7 +51,7 @@ class UserP extends React.Component {
     };
     //confirm window handler
     confirmHandler = (confirmRes) => {
-        console.log('confirmRes: ',confirmRes);
+        //console.log('confirmRes: ',confirmRes);
         this.setState({confirmRes: confirmRes,ConfirmModalWindow: false});
         if(this.state.promptMessage === "Confirm You Password:") {
             this.setState({confirmRes: confirmRes,ConfirmModalWindow: false},()=>this.deleteAccount());
@@ -88,152 +88,155 @@ class UserP extends React.Component {
                 this.setState({ errorRedirect: true });
             }
         } catch (err){
-            console.log("login err: ",err);
+            console.log("deleteAccount err: ",err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
         }
     };
     //Check for regular expressions
     regExpr =(name)=> {
-        var a = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+        const a = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
         return name.match(a);
     };
     //Check ReWriten newUsername
     ckReName =(e)=> {
-        var newUsername = this.refs.nUInp;
-        var newName = e.currentTarget.value;
+        let newUsername = this.refs.nUInp;
+        let newName = e.currentTarget.value;
         if(this.regExpr(newName)) {
             this.setState({err: {message:'Don not use special characters in name!'}, modalWindow:true,});
             return; //alert('Don not use special characters in name');
         }
-        if(newName == this.state.buffCkName || newName == this.state.user.username || this.regExpr(newName)) {newUsername.style.color = '#69bc37';}
+        if(newName === this.state.buffCkName || newName === this.state.user.username || this.regExpr(newName)) {newUsername.style.color = '#69bc37';}
         else {newUsername.style.color = '#ca5b53';}
     };
     //Reade and validate input password
     ckPass =(e)=> {
-        var keyLog = e.currentTarget.value;
-        var pass = this.refs.oPInp;//Password inp field
+        let keyLog = e.currentTarget.value;
+        let pass = this.refs.oPInp;//Password inp field
         if(this.checkHash(this.state.user.hashedPassword,this.state.user.salt,keyLog)) {
             pass.style.color = '#69bc37';
         } else {
             pass.style.color = '#ca5b53';
-        };
+        }
     };
     //Read and validate input confirm pass
     confPass =(e)=> {
-        var keyLog = e.currentTarget.value;
-        var newPassKeyLog = this.refs.nPInp;
-        var confirmPassword = this.refs.cPInp;
-        if(keyLog == newPassKeyLog.value) {
+        let keyLog = e.currentTarget.value;
+        let newPassKeyLog = this.refs.nPInp;
+        let confirmPassword = this.refs.cPInp;
+        if(keyLog === newPassKeyLog.value) {
             confirmPassword .style.color = '#69bc37';
             newPassKeyLog.style.color = '#69bc37';
         } else {
             confirmPassword .style.color = '#ca5b53';
             newPassKeyLog.style.color = '#ca5b53';
-        };
+        }
     };
     //checkHash
     checkHash =(userHash,userSalt,pass)=> {
         //HeshPass func
-        var hash = CryptoJS.HmacSHA1(pass,userSalt).toString(CryptoJS.enc.Hex);
-        if (userHash == hash) return true
-            else return false
+        let hash = CryptoJS.HmacSHA1(pass,userSalt).toString(CryptoJS.enc.Hex);
+        return userHash === hash;
     };
     //Check name availability
-    checkName =(e)=> {
-        e.preventDefault();
-        var newUsername = this.refs.nUInp;
-        var newName = newUsername.value;
-        var oldUsername = this.state.user.username;
-        if(this.regExpr(newName)) {
-            this.setState({err: {message:'Don not use special characters in name!'}, modalWindow:true,});
-            return; //alert('Don not use special characters in name');
+    checkName = async (e)=> {
+        try {
+            e.preventDefault();
+            let newUsername = this.refs.nUInp;
+            let newName = newUsername.value;
+            let oldUsername = this.state.user.username;
+            if (this.regExpr(newName)) {
+                this.setState({err: {message: 'Don not use special characters in name!'}, modalWindow: true,});
+                return; //alert('Don not use special characters in name');
+            }
+            if (oldUsername === newName) {
+                this.setState({err: {message: 'You Old name and new name is equal!'}, modalWindow: true,});
+                return; //alert('You Old name and new name is equal.')
+            }
+            ;
+            let data = {'newUsername': newUsername};
+            let res = await fetch('http://' + config.serverUrl + ':' + config.serverPort + '/checkName', {
+                method: 'post',
+                body: JSON.stringify(data),
+                headers: {'Content-Type': 'application/json',},
+            });
+            if (res.ok) {
+                newUsername.style.color = '#69bc37';
+                this.setState({buffCkName: newName});
+                this.setState({newNameStatus: 'is free'});
+            } else {
+                newUsername.style.color = '#ca5b53';
+                this.setState({newNameStatus: 'is in use'});
+            }
+        } catch (err) {
+            console.log("checkName err: ", err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
         }
-        if(oldUsername == newName) {
-            this.setState({err: {message:'You Old name and new name is equal!'}, modalWindow:true,});
-            return; //alert('You Old name and new name is equal.')
-        };
-        // var data = 'newUsername=' + encodeURIComponent(newName);
-        // var xhr = new XMLHttpRequest();
-        // xhr.open('POST', '/checkName',true);
-        // xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        // xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        // xhr.send(data);
-        // xhr.onload =()=>  {
-        //     var Obj = JSON.parse(xhr.response);
-        //     if (xhr.readyState === xhr.DONE) {
-        //         if (!Obj.user) {
-        //             newUsername.style.color = '#69bc37';
-        //             this.setState({ buffCkName: newName });
-        //             this.setState({ newNameStatus: 'is free' });
-        //
-        //         } else {
-        //             newUsername.style.color = '#ca5b53';
-        //             this.setState({ newNameStatus: 'is in use' });
-        //         }
-        //     }
-        // };
-        // return false;
     };
     //Send new user data
-    sendAuth =()=> {
-        //e.preventDefault();
-        var username = (this.refs.nUInp).value;
-        var password = (this.refs.nPInp).value;
-        var confPass = (this.refs.cPInp).value;
-        var oldUsername = this.state.user.username;
-        var oldPassword = (this.refs.oPInp).value;
-        if(this.regExpr(username)) {
-            this.setState({err: {message:'Don not use special characters in name!'}, modalWindow:true,});
-            return; //alert('Don not use special characters in name!');
-        }
-        if(!username) {
-            this.setState({err: {message:'You forgot type name, try one more!'}, modalWindow:true,});
-            return; //alert('You forgot type name, try one more.');
-        }
-        if(!this.checkHash(this.state.user.hashedPassword,this.state.user.salt,oldPassword)) {
-            this.setState({err: {message:'You Old passwords is not valid!'}, modalWindow:true,});
-            return; //alert('You Old passwords is not valid.');
-        }
-        if (!password || !confPass) {
-            this.setState({err: {message:'You forgot type passwords, try one more!'}, modalWindow:true,});
-            return; //alert('You forgot type passwords, try one more.');
-        }
-        if (password != confPass) {
-            this.setState({err: {message:'Passwords not equal! Change passwords and try one more!'}, modalWindow:true,});
-            return; //alert('Passwords not equal! Change passwords and try one more.');
-        }
-        //console.log('oldUsername: ',oldUsername,',','newUsername: ',username,',','newPassword: ',password);
-        var data = 'oldUsername='+ encodeURIComponent(oldUsername)
-            + '&username=' + encodeURIComponent(username)
-            +'&password=' + encodeURIComponent(password)
-            +'&oldPassword='+ encodeURIComponent(oldPassword);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/changeUserData',true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.send(data);
-        xhr.onload  = () => {
-            if (xhr.readyState === xhr.DONE) {
-                if (xhr.status === 200) {
-                    this.setState({err: {message:'User data changed successful!'}, modalWindow:true,});
-                    //alert('User data changed successful');
-                    sessionStorage.setItem('user', xhr.response);
-                    setTimeout(()=>{this.setState({ chatRedirect: true });},2000);
-
-                } else {
-                    //console.log('xhr.onload: ','err');
-                    sessionStorage.setItem('error', xhr.response);
-                    this.setState({ errorRedirect: true });
-                }
+    sendAuth = async (e) => {
+        try {
+            let username = (this.refs.nUInp).value;
+            let password = (this.refs.nPInp).value;
+            let confPass = (this.refs.cPInp).value;
+            let oldUsername = this.state.user.username;
+            let oldPassword = (this.refs.oPInp).value;
+            if(this.regExpr(username)) {
+                return this.setState({err: {message:'Don not use special characters in name!'}, modalWindow:true,});
             }
-        };
-        return false;
-};
+            if(!username) {
+                return this.setState({err: {message:'You forgot type name, try one more!'}, modalWindow:true,});
+            }
+            if(!this.checkHash(this.state.user.hashedPassword,this.state.user.salt,oldPassword)) {
+                return this.setState({err: {message:'You Old passwords is not valid!'}, modalWindow:true,});
+
+            }
+            if (!password || !confPass) {
+                return this.setState({err: {message:'You forgot type passwords, try one more!'}, modalWindow:true,});
+
+            }
+            if (password != confPass) {
+                return this.setState({err: {message:'Passwords not equal! Change passwords and try one more!'}, modalWindow:true,});
+
+            }
+            let data = {'oldUsername':oldUsername,'username':username,'password':password,'oldPassword':oldPassword};
+            let res = await fetch('http://' + config.serverUrl +':'+ config.serverPort + '/changeUserData',{
+                method:'post',
+                body: JSON.stringify(data),
+                headers:{'Content-Type': 'application/json',},
+            });
+            if(res.ok) {
+                res = await res.json();
+                console.log("UP sendAuth res.user: ",res.user);
+                this.setState({err: {message:'User data changed successful!'}, modalWindow:true,});
+                sessionStorage.setItem('user', res.user);
+                setTimeout(()=>{this.setState({ chatRedirect: true });},2000);
+            } else {
+                sessionStorage.setItem('error', res);
+                this.setState({ errorRedirect: true });
+            }
+        } catch (err){
+            console.log("UP sendAuth err: ",err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
+        }
+    };
 
     render() {
         //console.log('/UP user: ',this.state.user);
-        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;};
-        if(this.state.errorRedirect) {return <Redirect to='/error'/>};
-        if(this.state.frontpageRedirect) {return <Redirect to='/'/>};
+        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;}
+        if(this.state.errorRedirect) {return <Redirect to='/error'/>}
+        if(this.state.frontpageRedirect) {return <Redirect to='/'/>}
         return (
             <Page user={this.state.user} title="USER PAGE">
 

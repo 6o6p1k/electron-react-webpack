@@ -23,7 +23,7 @@ function isLoggedIn() {
 //Check ? Admin
 function isAdministrator() {
     if (!JSON.parse(sessionStorage.getItem('user'))) {return false}
-    var user = JSON.parse(sessionStorage.getItem('user')).user;
+    var user = JSON.parse(sessionStorage.getItem('user'));
     //console.log('/index Administrator: ',user);
     if (user.username === 'Administrator') {return true}
     else {return false}

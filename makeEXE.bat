@@ -1,0 +1,1 @@
+electron-packager d:\Temp\my_JS\ElChat\ ElChat --platform=win32 --arch=x64

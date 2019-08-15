@@ -5,6 +5,8 @@ import ReactTable from "react-table";
 import 'react-table/react-table.css'
 import matchSorter from 'match-sorter'
 import checkboxHOC from "react-table/lib/hoc/selectTable";
+import config from '../../../config'
+import Modal from '../partials/modalWindow.js'
 
 const CheckboxTable = checkboxHOC(ReactTable);
 
@@ -12,66 +14,74 @@ const CheckboxTable = checkboxHOC(ReactTable);
 
 class UsersAdm extends React.Component {
     constructor (props) {
-        var user = JSON.parse(sessionStorage.getItem('user')).user;
+        let user = JSON.parse(sessionStorage.getItem('user'));
         super(props);
         this.state = {
             user: user,
             users: undefined,
             errorRedirect:false,
             selection: [],
+            modalWindow:false,
             selectAll: false
         };
     };
 
-    delUsers =(e)=> {
-        e.preventDefault();
-        var xhr = new XMLHttpRequest();
-        var data = this.state.selection;
-        if (data.length == 0) return alert('Nothing to deleting!');
-        xhr.open('POST', '/users',true);
-        xhr.setRequestHeader("Content-type", 'application/json');
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.send(JSON.stringify({usersArray: data}));
-        xhr.onload = () => {
-            if (xhr.readyState === xhr.DONE) {
-                var response = JSON.parse(xhr.response);
-                this.setState({selection: []});
-                if (xhr.status === 200) {
-                    //console.log('delUsers, res: ',response);
-                    this.setState({users: response})
-                }
-                else {
-                    //console.log('delUsers, err: ',response);
-                    sessionStorage.setItem('error', xhr.response);
-                    this.setState({ errorRedirect: true });
-                }
-            }
-        };
-        return false;
+    //modal window handler
+    hideModal = () => {
+        this.setState({modalWindow: false});
     };
 
-    getUsers =(e)=> {
-        e.preventDefault();
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/users',true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-        xhr.send();
-        xhr.onload = () => {
-            if (xhr.readyState === xhr.DONE) {
-                var response = JSON.parse(xhr.response);
-                if (xhr.status === 200) {
-                    //console.log('xhr.onload users, res: ',response);
-                    this.setState({users: response})
-                }
-                else {
-                    //console.log('xhr.onload err: ',response);
-                    sessionStorage.setItem('error', xhr.response);
-                    this.setState({ errorRedirect: true });
-                }
+    delUsers = async (e)=> {
+        try {
+            e.preventDefault();
+            let data = this.state.selection;
+            if (data.length === 0) return alert('Nothing to deleting!');
+
+            let res = await fetch('http://' + config.serverUrl +':'+ config.serverPort + '/users',{
+                method:'post',
+                body: JSON.stringify({usersArray: data}),
+                headers:{'Content-Type': 'application/json',},
+            });
+            if(res.ok) {
+                res = await res.json();
+                this.setState({selection: []});
+                this.setState({users: res})
+            } else {
+                sessionStorage.setItem('error', res);
+                this.setState({ errorRedirect: true });
             }
-        };
-        return false;
+        } catch (err){
+            console.log("delUsers err: ",err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
+        }
+    };
+
+    getUsers = async (e)=> {
+        try {
+            e.preventDefault();
+            let res = await fetch('http://' + config.serverUrl +':'+ config.serverPort + '/users',{
+                method:'post',
+                headers:{'Content-Type': 'application/json',},
+            });
+            if(res.ok) {
+                res = await res.json();
+                this.setState({users: res})
+            } else {
+                sessionStorage.setItem('error', res);
+                this.setState({ errorRedirect: true });
+            }
+        } catch (err){
+            console.log("delUsers err: ",err);
+            this.setState({
+                err: err,
+                errMessage:"Sorry, but the server is temporarily unavailable, try again later.",
+                modalWindow: true
+            });
+        }
     };
 
     toggleSelection = (key, shift, row) => {
@@ -205,6 +215,9 @@ class UsersAdm extends React.Component {
         };
         return (
             <Page user={this.state.user} title="ADMIN PAGE">
+                {(this.state.modalWindow)?(
+                    <Modal show={this.state.modalWindow} handleClose={this.hideModal} err={this.state.err}/>
+                ):('')}
                 {(!data)?(
                     <div className="form-group">
                         <div className="wrapper" >

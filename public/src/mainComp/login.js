@@ -73,8 +73,8 @@ class LoginP extends React.Component {
 
     render() {
         //console.log('/login user:',this.state);
-        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;};
-        if(this.state.errorRedirect) {return <Redirect to='/error' />};
+        if(this.state.chatRedirect) {return <Redirect to='/chat'/>;}
+        if(this.state.errorRedirect) {return <Redirect to='/error' />}
         return (
             <Page user={this.state.user} chatRedirect={this.state.chatRedirect} title="LOGIN PAGE" className="container">
                 {this.state.modalWindow ?
